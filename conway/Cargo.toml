@@ -1,0 +1,5 @@
+[package]
+
+name = "conway"
+version = "0.0.1"
+authors = ["Arthur Liao <arthurtw8@gmail.com>"]
