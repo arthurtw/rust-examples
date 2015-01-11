@@ -28,8 +28,8 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     };
 
     // Parse words
-    // let mut map = collections::BTreeMap::<String, u32>::new();
     let mut map = btree_map::BTreeMap::<String, u32>::new();
+    // let mut map = collections::BTreeMap::<String, u32>::new();
     let re = Regex::new(r"\w+").unwrap();
     for reader in readers.iter_mut() {
         for line in reader.lines() {
