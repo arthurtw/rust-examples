@@ -32,7 +32,6 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     let mut map = btree_map::BTreeMap::<String, u32>::new();
     let re = Regex::new(r"\w+").unwrap();
     for reader in readers.iter_mut() {
-        // let mut buf_reader = BufferedReader::new(*reader);
         for line in reader.lines() {
             for caps in re.captures_iter(line.unwrap().as_slice()) {
                 if let Some(cap) = caps.at(0) {
