@@ -3,3 +3,7 @@
 name = "wordcount"
 version = "0.0.1"
 authors = ["Arthur Liao <arthurtw8@gmail.com>"]
+
+[dependencies]
+regex = "*"
+regex_macros = "*"
