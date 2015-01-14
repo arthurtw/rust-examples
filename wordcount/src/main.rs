@@ -4,7 +4,7 @@
 extern crate regex;
 use regex::Regex;
 use std::ascii::AsciiExt;
-// use std::collections;
+use std::collections;
 use std::io;
 use std::io::{BufferedReader, File, IoResult};
 
@@ -28,8 +28,8 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     };
 
     // Parse words
-    let mut map = btree_map::BTreeMap::<String, u32>::new();
-    // let mut map = collections::BTreeMap::<String, u32>::new();
+    let mut map = collections::HashMap::<String, u32>::new();
+    // let mut map = btree_map::BTreeMap::<String, u32>::new();
     let re = Regex::new(r"\w+").unwrap();
     for reader in readers.iter_mut() {
         for line in reader.lines() {
@@ -52,9 +52,13 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     }
 
     // Write counts
-    for (k, v) in map.iter() {
-        let line = format!("{}\t{}\n", v, k);
-        try!(writer.write(line.as_bytes()));
+    let mut words: Vec<&String> = map.keys().collect();
+    words.sort();
+    for word in words.iter() {
+        if let Some(count) = map.get(*word) {
+            let line = format!("{}\t{}\n", count, word);
+            try!(writer.write(line.as_bytes()));
+        }
     }
     Ok(())
 }
