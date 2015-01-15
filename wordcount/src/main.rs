@@ -5,6 +5,7 @@
 #[plugin] #[no_link]
 extern crate regex_macros;
 extern crate regex;
+// use regex::Regex;
 use std::ascii::AsciiExt;
 use std::collections;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
@@ -35,6 +36,8 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     // let mut map = btree_map::BTreeMap::<String, u32>::new();
     let re = regex!(r"\w+");
     // let re = Regex::new(r"\w+").unwrap();
+    // let re = regex!(r"[a-zA-Z0-9_]+");
+    // let re = Regex::new(r"[a-zA-Z0-9_]+").unwrap();
     for reader in readers.iter_mut() {
         for line in reader.lines() {
             for caps in re.captures_iter(line.unwrap().as_slice()) {
