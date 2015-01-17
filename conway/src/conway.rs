@@ -18,7 +18,7 @@ impl Conway {
         }
     }
 
-    pub fn init(&mut self, pattern: &Vec<&str>) {
+    pub fn init(&mut self, pattern: &[&str]) {
         let h = pattern.len();
         let h0 = (MAP_HEIGHT - h) / 2;
         for i in 0..(h) {
