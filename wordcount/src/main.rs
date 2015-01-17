@@ -10,7 +10,7 @@ use std::ascii::AsciiExt;
 use std::collections;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io;
-use std::io::{BufferedReader, File, IoResult};
+use std::io::{BufferedReader, BufferedWriter, File, IoResult};
 
 pub mod config;
 pub mod btree_map;
@@ -27,7 +27,7 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
         }
     }
     let mut writer = match cfg.output {
-        Some(ref x) => { Box::new(try!(File::create(&Path::new(x.as_slice())))) as Box<Writer> }
+        Some(ref x) => { Box::new(BufferedWriter::new(try!(File::create(&Path::new(x.as_slice()))))) as Box<Writer> }
         None => { Box::new(io::stdout()) as Box<Writer> }
     };
 
@@ -40,16 +40,14 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     // let re = Regex::new(r"[a-zA-Z0-9_]+").unwrap();
     for reader in readers.iter_mut() {
         for line in reader.lines() {
-            for caps in re.captures_iter(line.unwrap().as_slice()) {
-                if let Some(cap) = caps.at(0) {
-                    let word = match cfg.ignore_case {
-                        true  => cap.to_ascii_lowercase(),
-                        false => cap.to_string(),
-                    };
-                    match map.entry(word) {
-                        Occupied(mut view) => { *view.get_mut() += 1; }
-                        Vacant(view) => { view.insert(1); }
-                    }
+            let line = line.unwrap();
+            for (start, end) in re.find_iter(&line[]) {
+                let word = &line[start..end];
+                let word = if cfg.ignore_case { word.to_ascii_lowercase() }
+                            else { String::from_str(word) };
+                match map.entry(word) {
+                    Occupied(mut view) => { *view.get_mut() += 1; }
+                    Vacant(view) => { view.insert(1); }
                 }
             }
         }
@@ -60,8 +58,7 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     words.sort();
     for word in words.iter() {
         if let Some(count) = map.get(*word) {
-            let line = format!("{}\t{}\n", count, word);
-            try!(writer.write(line.as_bytes()));
+            try!(writeln!(writer, "{}\t{}", count, word));
         }
     }
     Ok(())
