@@ -27,8 +27,8 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
         }
     }
     let mut writer = match cfg.output {
-        Some(ref x) => {
-            let file = try!(File::create(&Path::new(x.as_slice())));
+        Some(ref name) => {
+            let file = try!(File::create(&Path::new(name.as_slice())));
             Box::new(BufferedWriter::new(file)) as Box<Writer>
         }
         None => { Box::new(io::stdout()) as Box<Writer> }
