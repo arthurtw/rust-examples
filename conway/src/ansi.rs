@@ -12,16 +12,16 @@ pub enum Ansi {
 
 impl Ansi {
     pub fn csi(&self) {
-        let seq = match *self {
-            Ansi::Clear => "2J".to_string(),
-            Ansi::CursorUp(n) => format!("{}A", n),
-            Ansi::CursorDown(n) => format!("{}B", n),
-            Ansi::CursorForward(n) => format!("{}C", n),
-            Ansi::CursorBack(n) => format!("{}D", n),
-            Ansi::CursorPos(row, col) => format!("{};{}H", row, col),
-            Ansi::EraseToEOL => "K".to_string(),
+        print!("\x1b[");
+        match *self {
+            Ansi::Clear => print!("2J"),
+            Ansi::CursorUp(n) => print!("{}A", n),
+            Ansi::CursorDown(n) => print!("{}B", n),
+            Ansi::CursorForward(n) => print!("{}C", n),
+            Ansi::CursorBack(n) => print!("{}D", n),
+            Ansi::CursorPos(row, col) => print!("{};{}H", row, col),
+            Ansi::EraseToEOL => print!("K"),
         };
-        print!("\x1b[{}", seq);
     }
 }
 

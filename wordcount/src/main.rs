@@ -10,7 +10,7 @@ use std::ascii::AsciiExt;
 use std::collections;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io;
-use std::io::{BufferedReader, File, IoResult};
+use std::io::{BufferedReader, BufferedWriter, File, IoResult};
 
 pub mod config;
 pub mod btree_map;
@@ -27,7 +27,10 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
         }
     }
     let mut writer = match cfg.output {
-        Some(ref x) => { Box::new(try!(File::create(&Path::new(x.as_slice())))) as Box<Writer> }
+        Some(ref x) => {
+            let file = try!(File::create(&Path::new(x.as_slice())));
+            Box::new(BufferedWriter::new(file)) as Box<Writer>
+        }
         None => { Box::new(io::stdout()) as Box<Writer> }
     };
 
@@ -60,8 +63,7 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
     words.sort();
     for word in words.iter() {
         if let Some(count) = map.get(*word) {
-            let line = format!("{}\t{}\n", count, word);
-            try!(writer.write(line.as_bytes()));
+            try!(writeln!(writer, "{}\t{}", count, word));
         }
     }
     Ok(())

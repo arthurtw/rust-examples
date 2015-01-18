@@ -67,7 +67,7 @@ impl fmt::String for Conway {
             }
             try!(write!(f, "\n"));
         }
-        write!(f, "")
+        Ok(())
     }
 }
 
