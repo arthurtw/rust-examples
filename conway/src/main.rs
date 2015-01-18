@@ -1,11 +1,10 @@
 // Uncomment the following line to disable unstable warnings:
 // #![allow(unstable)]
 
-extern crate libc;
-
-use std::io;
+use std::io::{self, Timer};
 use std::thread::Thread;
 use std::time::Duration;
+use std::sync::mpsc::channel;
 
 use ansi::Ansi;
 use conway::Conway;
@@ -13,12 +12,11 @@ use conway::Conway;
 pub mod ansi;
 pub mod conway;
 
-fn start(n: u32, initial: &Vec<&str>) {
+fn start(n: u32, initial: &[&str]) {
+    let (tx, quit_thread) = channel();
     Thread::spawn(move || {
         let _ = io::stdin().read_line();
-        unsafe {
-            libc::exit(0 as libc::c_int);
-        }
+        let _ = tx.send(());
     });
 
     let mut game = Conway::new();
@@ -27,13 +25,20 @@ fn start(n: u32, initial: &Vec<&str>) {
     Ansi::Clear.csi();
     println!("");
 
-    for i in 1..(n+1) {
+    let mut timer = Timer::new().unwrap();
+    let timer = timer.periodic(Duration::milliseconds(20));
+
+    for i in 0..(n) {
         Ansi::CursorPos(1, 1).csi();
         print!("{}", game);
-        println!("n = {:<5} Press ENTER to exit", i);
-        io::timer::sleep(Duration::milliseconds(20));
-        if !game.next() {
-            break;
+        println!("n = {:<5} Press ENTER to exit", i + 1);
+        select!{
+            _ = timer.recv() => {
+                if !game.next() { break; }
+            },
+            _ = quit_thread.recv() => {
+                break;
+            }
         }
     }
 }
@@ -51,6 +56,6 @@ fn main() {
         "           1   1                    ",
         "            11                      ",
     };
-    start(n, &initial);
+    start(n, &initial[]);
 }
 

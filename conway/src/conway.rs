@@ -1,14 +1,28 @@
 use std::cmp;
 use std::fmt;
+use std::mem;
 
 pub const MAP_WIDTH: usize = 40;
 pub const MAP_HEIGHT: usize = 30;
 
 type Cell = bool;
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct Conway {
     map: [[Cell; MAP_WIDTH]; MAP_HEIGHT],
+}
+
+impl Eq for Conway { }
+// We can't derive this, because [T; n] doesn't have an implentation
+impl PartialEq for Conway {
+    fn eq(&self, other: &Conway) -> bool {
+        for (left_row, right_row) in self.map.iter().zip(other.map.iter()) {
+            if &left_row[] != &right_row[] {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl Conway {
@@ -18,7 +32,7 @@ impl Conway {
         }
     }
 
-    pub fn init(&mut self, pattern: &Vec<&str>) {
+    pub fn init(&mut self, pattern: &[&str]) {
         let h = pattern.len();
         let h0 = (MAP_HEIGHT - h) / 2;
         for i in 0..(h) {
@@ -33,7 +47,8 @@ impl Conway {
 
     /// Iterate to next state. Return false if the state remains unchanged.
     pub fn next(&mut self) -> bool {
-        let mut newmap = [[false; MAP_WIDTH]; MAP_HEIGHT];
+        // because all items in the new map will be overwritten, it's safe to use uninitialized mem
+        let mut newmap = Conway { map: unsafe { mem::uninitialized() } };
         for i in 0..(MAP_HEIGHT) {
             for j in 0..(MAP_WIDTH) {
                 let mut nlive = 0;
@@ -44,7 +59,7 @@ impl Conway {
                         }
                     }
                 }
-                newmap[i][j] = match (self.map[i][j], nlive) {
+                newmap.map[i][j] = match (self.map[i][j], nlive) {
                     (true, 2) | (true, 3) => true,
                     (true, _) => false,
                     (false, 3) => true,
@@ -52,9 +67,8 @@ impl Conway {
                 };
             }
         }
-        // let changed = self.map != newmap;
-        let changed = true;
-        self.map = newmap;
+        let changed = *self != newmap;
+        *self = newmap;
         changed
     }
 }
