@@ -1,49 +1,50 @@
-// Uncomment the following line to disable unstable warnings:
-// #![allow(unstable)]
+#![feature(plugin, io, std_misc)]
 
-#![feature(plugin)]
-#[plugin] #[no_link]
-extern crate regex_macros;
+#![plugin(regex_macros)]
+
 extern crate regex;
 // use regex::Regex;
 use std::ascii::AsciiExt;
 use std::collections;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io;
-use std::io::{BufferedReader, BufferedWriter, File, IoResult};
+use std::io::prelude::*;
+use std::io::{BufReader, BufWriter};
+use std::fs::File;
 
-pub mod config;
-pub mod btree_map;
+mod config;
+#[allow(unused)]
+mod btree_map;
 
-fn do_work(cfg: &config::Config) -> IoResult<()> {
+fn do_work(cfg: &config::Config) -> io::Result<()> {
     // Open input and output files
-    let mut readers = vec![];
+    let mut readers = Vec::with_capacity(std::cmp::max(1, cfg.input.len()));
     if cfg.input.is_empty() {
-        readers.push(BufferedReader::new(Box::new(io::stdin()) as Box<Reader>));
+        readers.push(BufReader::new(Box::new(io::stdin()) as Box<Read>));
     } else {
-        for name in cfg.input.iter() {
-            let file = try!(File::open(&Path::new(name.as_slice())));
-            readers.push(BufferedReader::new(Box::new(file) as Box<Reader>));
+        for name in &cfg.input {
+            let file = try!(File::open(name));
+            readers.push(BufReader::new(Box::new(file) as Box<Read>));
         }
     }
     let mut writer = match cfg.output {
         Some(ref name) => {
-            let file = try!(File::create(&Path::new(name.as_slice())));
-            Box::new(BufferedWriter::new(file)) as Box<Writer>
+            let file = try!(File::create(name));
+            Box::new(BufWriter::new(file)) as Box<Write>
         }
-        None => { Box::new(io::stdout()) as Box<Writer> }
+        None => { Box::new(io::stdout()) as Box<Write> }
     };
 
     // Parse words
     let mut map = collections::HashMap::<String, u32>::new();
-    // let mut map = btree_map::BTreeMap::<String, u32>::new();
     let re = regex!(r"\w+");
+
     // let re = Regex::new(r"\w+").unwrap();
     // let re = regex!(r"[a-zA-Z0-9_]+");
     // let re = Regex::new(r"[a-zA-Z0-9_]+").unwrap();
-    for reader in readers.iter_mut() {
+    for reader in &mut readers {
         for line in reader.lines() {
-            for caps in re.captures_iter(line.unwrap().as_slice()) {
+            for caps in re.captures_iter(&line.unwrap()) {
                 if let Some(cap) = caps.at(0) {
                     let word = match cfg.ignore_case {
                         true  => cap.to_ascii_lowercase(),
@@ -57,12 +58,11 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
             }
         }
     }
-
     // Write counts
     let mut words: Vec<&String> = map.keys().collect();
     words.sort();
-    for word in words.iter() {
-        if let Some(count) = map.get(*word) {
+    for &word in &words {
+        if let Some(count) = map.get(word) {
             try!(writeln!(writer, "{}\t{}", count, word));
         }
     }
@@ -71,7 +71,7 @@ fn do_work(cfg: &config::Config) -> IoResult<()> {
 
 #[cfg(not(test))]
 fn main() {
-    let cfg = match config::get_config(std::os::args()) {
+    let cfg = match config::get_config(std::env::args()) {
         Ok(c) => c,
         Err(usage) => {
             println!("{}", usage);

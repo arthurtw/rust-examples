@@ -1,5 +1,6 @@
 use std::cmp;
 use std::fmt;
+use std::num::Int;
 
 pub const MAP_WIDTH: usize = 40;
 pub const MAP_HEIGHT: usize = 30;
@@ -25,8 +26,8 @@ impl Conway {
             let row = pattern[i];
             let w = row.len();
             let w0 = (MAP_WIDTH - w) / 2;
-            for j in 0..(w) {
-                self.map[i + h0][j + w0] = row.char_at(j) == '1';
+            for (j, c) in row.chars().enumerate() {
+                self.map[i + h0][j + w0] = c == '1';
             }
         }
     }
@@ -37,8 +38,8 @@ impl Conway {
         for i in 0..(MAP_HEIGHT) {
             for j in 0..(MAP_WIDTH) {
                 let mut nlive = 0;
-                for i2 in cmp::max(i-1, 0)..cmp::min(i+2, MAP_HEIGHT) {
-                    for j2 in cmp::max(j-1, 0)..cmp::min(j+2, MAP_WIDTH) {
+                for i2 in i.saturating_sub(1)..cmp::min(i+2, MAP_HEIGHT) {
+                    for j2 in j.saturating_sub(1)..cmp::min(j+2, MAP_WIDTH) {
                         if self.map[i2][j2] && (i2 != i || j2 != j) {
                             nlive += 1;
                         }
@@ -59,7 +60,7 @@ impl Conway {
     }
 }
 
-impl fmt::String for Conway {
+impl fmt::Display for Conway {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for row in self.map.iter() {
             for cell in row.iter() {

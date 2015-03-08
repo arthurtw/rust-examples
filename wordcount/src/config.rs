@@ -1,41 +1,41 @@
 extern crate getopts;
-use self::getopts::{optopt, optflag, OptGroup};
+use self::getopts::Options;
 
 pub type ConfigResult = Result<Config, String>;
 
-#[derive(Show)]
+#[derive(Debug)]
 pub struct Config {
     pub input: Vec<String>,
     pub output: Option<String>,
     pub ignore_case: bool,
 }
 
-fn get_usage(program: &str, opts: &[OptGroup]) -> String {
-    let prgm_path = Path::new(program);
-    let prgm_name = prgm_path.filename_str().unwrap();
-    let brief = format!("Usage: {} [OPTIONS] [FILES]", prgm_name);
+fn get_usage(program: &str, opts: Options) -> String {
+    let brief = format!("Usage: {} [OPTIONS] [FILES]", program);
     // let brief = format!("Usage: {} [OPTIONS] INPUT\n\t(for stdin INPUT, use \"-\")", prgm_name);
-    getopts::usage(brief.as_slice(), opts)
+    opts.usage(&brief)
 }
 
-pub fn get_config(args: Vec<String>) -> ConfigResult {
-    let program = args[0].as_slice();
+pub fn get_config<I: Iterator<Item=String>>(mut args: I) -> ConfigResult {
+    let program = args.next().unwrap();
 
-    let opts = &[
-        optopt("o", "", "set output file name", "NAME"),
-        optflag("i", "ignore-case", "ignore case"),
-        optflag("h", "help", "print this help menu"),
-    ];
-    let matches = match getopts::getopts(args.tail(), opts) {
+    let mut opts = Options::new();
+    opts.optopt("o", "output", "set output file name", "NAME")
+        .optflag("i", "ignore-case", "ignore case")
+        .optflag("h", "help", "print this help menu");
+
+    let mut matches = match opts.parse(args) {
         Ok(m) => { m }
-        Err(_) => { return Err(get_usage(program, opts)) }
+        Err(_) => { return Err(get_usage(&program, opts)) }
     };
     if matches.opt_present("h") {
-        return Err(get_usage(program, opts));
+        return Err(get_usage(&program, opts));
     }
 
+    let free = ::std::mem::replace(&mut matches.free, Vec::new());
+
     Ok(Config {
-        input: matches.free.clone(),
+        input: free,
         output: matches.opt_str("o"),
         ignore_case: matches.opt_present("i"),
     })

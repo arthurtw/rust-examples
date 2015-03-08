@@ -1,10 +1,11 @@
-// Uncomment the following line to disable unstable warnings:
-// #![allow(unstable)]
+#![feature(io, old_io, libc, std_misc)]
 
 extern crate libc;
 
 use std::io;
-use std::thread::Thread;
+use std::io::prelude::*;
+use std::old_io::timer;
+use std::thread;
 use std::time::Duration;
 
 use ansi::Ansi;
@@ -14,8 +15,10 @@ pub mod ansi;
 pub mod conway;
 
 fn start(n: u32, initial: &[&str]) {
-    Thread::spawn(move || {
-        let _ = io::stdin().read_line();
+    thread::spawn(move || {
+        let mut line = String::new();
+        let stdin = io::stdin();
+        let _ = stdin.lock().read_line(&mut line);
         unsafe {
             libc::exit(0 as libc::c_int);
         }
@@ -31,7 +34,7 @@ fn start(n: u32, initial: &[&str]) {
         Ansi::CursorPos(1, 1).csi();
         print!("{}", game);
         println!("n = {:<5} Press ENTER to exit", i + 1);
-        io::timer::sleep(Duration::milliseconds(20));
+        timer::sleep(Duration::milliseconds(20));
         if !game.next() {
             break;
         }
@@ -51,6 +54,6 @@ fn main() {
         "           1   1                    ",
         "            11                      ",
     };
-    start(n, &initial[]);
+    start(n, &initial);
 }
 
