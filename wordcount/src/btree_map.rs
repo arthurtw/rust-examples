@@ -1,6 +1,6 @@
 use std::cmp::Ordering::{Less, Greater, Equal};
 
-#[derive(Show)]
+#[derive(Debug)]
 pub struct BTreeMap<K: Ord, V> {
     root: Link<K, V>,
     length: usize,
@@ -8,7 +8,7 @@ pub struct BTreeMap<K: Ord, V> {
 
 type Link<K, V> = Option<Box<TreeNode<K, V>>>;
 
-#[derive(Show)]
+#[derive(Debug)]
 struct TreeNode<K: Ord, V> {
     left: Link<K, V>,
     right: Link<K, V>,

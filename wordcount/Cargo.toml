@@ -7,3 +7,4 @@ authors = ["Arthur Liao <arthurtw8@gmail.com>"]
 [dependencies]
 regex = "*"
 regex_macros = "*"
+getopts = "*"
