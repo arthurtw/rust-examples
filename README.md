@@ -1,12 +1,8 @@
 # Rust examples
 
-The examples are written with rust-1.0.0-alpha.
+The examples were originally written with rust-1.0.0-alpha, and are updated to 1.0.0 nightly build 2015-03-09. (Thanks to Zachary Dremann.)
 
-To suppress unstable warnings, uncomment line 2 of `main.rs` in the project `src` directory:
-
-    // #![allow(unstable)]
-
-And use
+Use
 
     $ cargo build
 
